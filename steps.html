@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro Simple</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+        }
+        .stepper {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .stepper::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: #e0e0e0;
+            z-index: 1;
+        }
+        .step {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            width: 70px;
+        }
+        .step-indicator {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #e0e0e0;
+            color: #777;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            transition: all 0.3s ease;
+        }
+        .step.active .step-indicator {
+            background-color: #4CAF50;
+            color: white;
+            transform: scale(1.1);
+        }
+        .step-label {
+            font-size: 12px;
+            color: #666;
+            transition: color 0.3s ease;
+        }
+        .step.active .step-label {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        .form-step { 
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .form-step.active {
+            display: block;
+            opacity: 1;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            transition: border-color 0.3s ease;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+        }
+        .form-group input:invalid {
+            border-color: #f44336;
+        }
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .btn-prev {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        .btn-next {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #errorMessage {
+            color: #f44336;
+            margin-bottom: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="stepper">
+            <div class="step active">
+                <div class="step-indicator">1</div>
+                <div class="step-label">Personal</div>
+            </div>
+            <div class="step">
+                <div class="step-indicator">2</div>
+                <div class="step-label">Contacto</div>
+            </div>
+            <div class="step">
+                <div class="step-indicator">3</div>
+                <div class="step-label">Confirmación</div>
+            </div>
+        </div>
+
+        <form id="registroForm" novalidate>
+            <div id="errorMessage"></div>
+
+            <div class="form-step active" id="personalStep">
+                <h2>Datos Personales</h2>
+                <div class="form-group">
+                    <label for="nombre">Nombre</label>
+                    <input type="text" id="nombre" name="nombre" required minlength="3" pattern="[A-Za-zÁ-ÿ\s]+" 
+                           title="Solo se permiten letras y espacios">
+                </div>
+                <div class="form-group">
+                    <label for="edad">Edad</label>
+                    <input type="number" id="edad" name="edad" required min="18" max="100" 
+                           title="Debe tener entre 18 y 100 años">
+                </div>
+            </div>
+
+            <div class="form-step" id="contactStep">
+                <h2>Información de Contacto</h2>
+                <div class="form-group">
+                    <label for="email">Correo</label>
+                    <input type="email" id="email" name="email" required 
+                           pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" 
+                           title="Ingrese un correo electrónico válido">
+                </div>
+                <div class="form-group">
+                    <label for="telefono">Teléfono</label>
+                    <input type="tel" id="telefono" name="telefono" required 
+                           pattern="[0-9]{9,15}" 
+                           title="Ingrese un número de teléfono válido (9-15 dígitos)">
+                </div>
+            </div>
+
+            <div class="form-step" id="confirmStep">
+                <h2>Confirmación</h2>
+                <div id="resumen"></div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-prev" id="prevBtn" disabled>Anterior</button>
+                <button type="button" class="btn btn-next" id="nextBtn">Siguiente</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('registroForm');
+            const steps = [...document.querySelectorAll('.form-step')];
+            const stepIndicators = [...document.querySelectorAll('.step')];
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const resumen = document.getElementById('resumen');
+            const errorMessage = document.getElementById('errorMessage');
+            let currentStep = 0;
+
+            const updateUI = () => {
+                steps.forEach((step, index) => {
+                    step.classList.toggle('active', index === currentStep);
+                });
+
+                stepIndicators.forEach((indicator, index) => {
+                    indicator.classList.toggle('active', index <= currentStep);
+                });
+
+                prevBtn.disabled = currentStep === 0;
+                nextBtn.textContent = currentStep === steps.length - 1 ? 'Enviar' : 'Siguiente';
+
+                if (currentStep === steps.length - 1) {
+                    resumen.innerHTML = steps.slice(0, -1)
+                        .map(step => [...step.querySelectorAll('input')]
+                            .map(input => `<p><strong>${input.labels[0].textContent}:</strong> ${input.value}</p>`)
+                            .join(''))
+                        .join('');
+                }
+
+                // Reset error message
+                errorMessage.textContent = '';
+                errorMessage.style.display = 'none';
+            };
+
+            const validateStep = () => {
+                const currentStepInputs = steps[currentStep].querySelectorAll('input');
+                
+                for (let input of currentStepInputs) {
+                    if (!input.validity.valid) {
+                        // Show specific error message
+                        let errorText = input.title;
+                        errorMessage.textContent = errorText;
+                        errorMessage.style.display = 'block';
+                        return false;
+                    }
+                }
+                return true;
+            };
+
+            nextBtn.addEventListener('click', () => {
+                if (validateStep()) {
+                    if (currentStep < steps.length - 1) {
+                        currentStep++;
+                        updateUI();
+                    } else {
+                        // Form submission simulation
+                        const formData = new FormData(form);
+                        const data = Object.fromEntries(formData.entries());
+                        console.log('Form submitted:', data);
+                        
+                        alert('Formulario enviado exitosamente');
+                        form.reset();
+                        currentStep = 0;
+                        updateUI();
+                    }
+                }
+            });
+
+            prevBtn.addEventListener('click', () => {
+                if (currentStep > 0) {
+                    currentStep--;
+                    updateUI();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
